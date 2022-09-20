@@ -88,7 +88,7 @@ def main(args):
                                              sampler=val_sampler)
 
     model = create_model(num_classes=5, has_logits=False).to(device)
-    model = DDP(model, device_ids=[int(local_rank)], output_device=int(local_rank))
+    model = DDP(model, device_ids=[int(local_rank)], output_device=int(local_rank),find_unused_parameters=True)
 
     if args.weights != "":
         assert os.path.exists(args.weights), "weights file: '{}' not exist.".format(args.weights)
