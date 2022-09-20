@@ -15,27 +15,25 @@ from utils import read_split_data, train_one_epoch, evaluate
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-# 新增2：从外面得到local_rank参数，在调用DDP的时候，其会自动给出这个参数，后面还会介绍。所以不用考虑太多，照着抄就是了。
-#       argparse是python的一个系统库，用来处理命令行调用，如果不熟悉，可以稍微百度一下，很简单！
-parser = argparse.ArgumentParser()
-parser.add_argument("--local_rank", default=-1)
-FLAGS = parser.parse_args()
-local_rank = FLAGS.local_rank
 
-# 新增3：DDP backend初始化
-#   a.根据local_rank来设定当前使用哪块GPU
-# torch.cuda.set_device(local_rank)
-torch.cuda.set_device('cuda:'+local_rank)
-#   b.初始化DDP，使用默认backend(nccl)就行。如果是CPU模型运行，需要选择其他后端。
-dist.init_process_group(backend='nccl')
-
-# 新增4：定义并把模型放置到单独的GPU上，需要在调用`model=DDP(model)`前做哦。
-#       如果要加载模型，也必须在这里做哦。
-device = torch.device("cuda:"+local_rank)
 
 
 def main(args):
-    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+
+    local_rank = args.local_rank
+
+    # 新增3：DDP backend初始化
+    #   a.根据local_rank来设定当前使用哪块GPU
+    # torch.cuda.set_device(local_rank)
+    torch.cuda.set_device('cuda:' + local_rank)
+    #   b.初始化DDP，使用默认backend(nccl)就行。如果是CPU模型运行，需要选择其他后端。
+    dist.init_process_group(backend='nccl')
+
+    # 新增4：定义并把模型放置到单独的GPU上，需要在调用`model=DDP(model)`前做哦。
+    #       如果要加载模型，也必须在这里做哦。
+    device = torch.device("cuda:" + local_rank)
+
+    # device = torch.device(args.device if torch.cuda.is_available() else "cpu")
 
     if os.path.exists("./weights") is False:
         os.makedirs("./weights")
@@ -167,6 +165,13 @@ if __name__ == '__main__':
     # 是否冻结权重
     parser.add_argument('--freeze-layers', type=bool, default=True)
     parser.add_argument('--device', default='cuda:0', help='device id (i.e. 0 or 0,1 or cpu)')
+
+    # 新增2：从外面得到local_rank参数，在调用DDP的时候，其会自动给出这个参数，后面还会介绍。所以不用考虑太多，照着抄就是了。
+    #       argparse是python的一个系统库，用来处理命令行调用，如果不熟悉，可以稍微百度一下，很简单！
+    # parser = argparse.ArgumentParser()
+    parser.add_argument("--local_rank", default=-1)
+
+
 
     opt = parser.parse_args()
 
