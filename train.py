@@ -75,15 +75,13 @@ def main(args):
 
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size=batch_size,
-                                               shuffle=True,
                                                pin_memory=True,
                                                num_workers=nw,
                                                collate_fn=train_dataset.collate_fn,
-                                               sampler=train_sampler)
+                                               sampler=train_sampler) # 此处不应该有shuffle，因为已经有sampler了
 
     val_loader = torch.utils.data.DataLoader(val_dataset,
                                              batch_size=batch_size,
-                                             shuffle=False,
                                              pin_memory=True,
                                              num_workers=nw,
                                              collate_fn=val_dataset.collate_fn,
